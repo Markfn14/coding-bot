@@ -2,13 +2,16 @@ const path = require('path');
 const fs = require('fs');
 const { test, expect } = require('@playwright/test');
 
-const screenshots = path.join(__dirname, '..', '.orbi', 'screens');
+// Run artifacts live in test-results/, which is git-ignored.
+const artifacts = path.join(__dirname, '..', 'test-results');
+const screenshots = path.join(artifacts, 'screens');
+const pageErrorsLog = path.join(artifacts, 'page-errors.log');
 fs.mkdirSync(screenshots, { recursive: true });
 
 test.beforeEach(async ({ page }) => {
-  fs.writeFileSync(path.join(__dirname, '..', '.orbi', 'page-errors.log'), '');
+  fs.writeFileSync(pageErrorsLog, '');
   page.on('pageerror', (error) => {
-    fs.appendFileSync(path.join(__dirname, '..', '.orbi', 'page-errors.log'), error.message + '\n');
+    fs.appendFileSync(pageErrorsLog, error.message + '\n');
   });
 });
 
@@ -61,7 +64,7 @@ test('add, check off, uncheck and delete items in the real page', async ({ page 
   await page.screenshot({ path: path.join(screenshots, '3-deleted.png') });
 
   await expect(page.locator('body')).not.toContainText('undefined');
-  expect(fs.readFileSync(path.join(__dirname, '..', '.orbi', 'page-errors.log'), 'utf8')).toBe('');
+  expect(fs.readFileSync(pageErrorsLog, 'utf8')).toBe('');
 });
 
 test('an empty title adds nothing and keeps focus in the input', async ({ page }) => {
@@ -75,5 +78,5 @@ test('an empty title adds nothing and keeps focus in the input', async ({ page }
   await expect(page.getByRole('listitem')).toHaveCount(0);
   await expect(newItem).toBeFocused();
   await page.screenshot({ path: path.join(screenshots, '4-empty-input.png') });
-  expect(fs.readFileSync(path.join(__dirname, '..', '.orbi', 'page-errors.log'), 'utf8')).toBe('');
+  expect(fs.readFileSync(pageErrorsLog, 'utf8')).toBe('');
 });
